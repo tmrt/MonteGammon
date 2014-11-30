@@ -91,7 +91,7 @@ class Board:
                     if (self.p1vec[i] > 0):
                         if (self.free_spot(i, die, p1)):
                             b = Board(self.p1vec[:],self.p2vec[:])
-                            b.move(0, die, p1)
+                            b.move(1, die, p1)
                             moveable.append(b)
         else:
             #must we re-enter?
@@ -106,7 +106,7 @@ class Board:
                     if (self.p2vec[i] > 0):
                         if (self.free_spot(i, die, p1)):
                             b = Board(self.p1vec[:],self.p2vec[:])
-                            b.move(0, die, p1)
+                            b.move(1, die, p1)
                             moveable.append(b)
         
         print(moveable)    
@@ -175,7 +175,7 @@ def main():
     g = Game(Board([0,24,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
                    [0,24,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]))
     g.roll_dice()
-    print(g.generate_valid_moves(False))
+    print(g.generate_valid_moves(True))
 
 if __name__ == "__main__":
     main()
