@@ -212,7 +212,10 @@ class Game:
             if (self.bornoff(m) and bearoff):
                 move = m
                 bearoff = False
-        if (bearoff):
+            elif (self.protect_lone(m) and bearoff and lone):
+                move = m
+                lone = False
+        if (bearoff and lone):
             move = random.choice(self.moves)
         return move
 
@@ -224,6 +227,18 @@ class Game:
                 res = True
         else:
             if (reduce(lambda x, y: x+y, board.p2vec) < reduce(lambda x, y: x+y, self.board.p2vec)):
+                res = True
+        return res
+
+    def protect_lone(self, board):
+        res = False
+        if (self.player):
+            if (reduce(lambda x, y: x + 1 if (y > 1) else 0, board.p1vec) < \
+                reduce(lambda x, y: x + 1 if (y > 1) else 0, self.board.p1vec)):
+                res = True
+        else:
+            if (reduce(lambda x, y: x + 1 if (y > 1) else 0, board.p2vec) < \
+                reduce(lambda x, y: x + 1 if (y > 1) else 0, self.board.p2vec)):
                 res = True
         return res
 

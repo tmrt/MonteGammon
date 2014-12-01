@@ -20,7 +20,7 @@ a Monte Carlo backgammon AI
 3. ~~Roll Dice~~
 4. ~~Randomly select valid move~~
   1. ~~Always select for bearoff~~
-  2. Protect lone piece
+  2. ~~Protect lone piece~~
   3. Capture lone piece
 5. Rollout for all valid moves at first level (2-4 until completion)
  1. ~~Play random games until completion~~
