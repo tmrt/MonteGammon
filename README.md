@@ -22,10 +22,11 @@ a Monte Carlo backgammon AI
   1. ~~Always select for bearoff~~
   2. ~~Protect lone piece~~
   3. ~~Capture lone piece~~
-5. Rollout for all valid moves at first level (2-4 until completion)
+5. ~~Rollout for all valid moves at first level (2-4 until completion)~~
  1. ~~Play random games until completion~~
- 2. make a branch for each valid move
- 3. collect stats on each move, W vs L
+ 2. ~~make a branch for each valid move~~
+ 3. ~~collect stats on each move, W vs L vs D~~
 6. Compare branches for best move
 7. PDF Presentation
 8. Multithreaded
+ 1. Identify performance issues

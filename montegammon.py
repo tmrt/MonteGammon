@@ -146,12 +146,12 @@ class Game:
     """A class to model a gameboard, provide valid moves,
     roll dice, play to completion"""
     
-    def __init__(self, board):
+    def __init__(self, board, turn):
         """Sets up the board with two player state vectors,
         0 is for barred pieces and 1:24 for number of pieces,
         on each spot. Starts off with player 1 as playing, rolls the dice
         and finds valid moves."""
-        self.player = True
+        self.player = turn
         self.roll = self.roll_dice()
         #array of applied board states
         self.moves = [] 
@@ -274,22 +274,43 @@ class Game:
         self.roll = self.roll_dice()
         self.player = not self.player
         self.generate_valid_moves()
-            
+ 
+
+class MonteRunner:
+    """Takes a Game with a Board state, looks at its possible moves, and runs a
+    Monte Carlo Simulation on each of the moves"""
+    def __init__(self):
+        #set up a new board
+        self.g = Game(Board([0,6,0,3,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                            [0,6,0,3,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]), True)
+        self.branches = self.g.moves
+        
+    def find_best_move(self):
+        for branch in self.branches:
+            win = 0
+            loss = 0
+            draw = 0
+            trials = 100
+            for i in range (1, trials):
+                simGame = Game(Board(branch.p1vec, branch.p2vec), False)
+                i = 1
+                steps = 300
+                while (not simGame.winner() and i < steps):
+                    simGame.next_turn()
+                    #print(g)
+                    i += 1
+                if (i < steps):
+                    if (simGame.player):
+                        win += 1
+                    else:
+                        loss += 1
+                else:
+                    draw += 1
+            print("{} has score: {}".format(branch.__str__(), (win + .3 * draw)/(1.0 * trials)))
+
 def main():
-    g = Game(Board([0,6,0,3,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                   [0,6,0,3,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]))
-    print(g)
-    i = 1
-    steps = 300
-    while (not g.winner() and i < steps):
-        print("{}------------------".format(i))
-        g.next_turn()
-        print(g)
-        i += 1
-    if (i < steps):
-        print("{} Won!".format("White" if g.player else "Black" ))
-    else:
-        print("draw")
+    m = MonteRunner()
+    m.find_best_move()
    
 if __name__ == "__main__":
     main()
