@@ -38,10 +38,10 @@ class Board:
         self.p2vec = p2vec[:]
         
     def __hash__(self):
-        return hash(''.join(str(x) for x in zip(self.p1vec, self.p2vec)))
-
+        return hash(reduce(lambda x, y: 10 * x + y, self.p1vec + self.p2vec))
+ 
     def __eq__(self, other):
-        return (self.p1vec == other.p1vec) and  (self.p2vec == other.p2vec)
+        return (self.p1vec == other.p1vec) and (self.p2vec == other.p2vec)
 
     def __str__(self):
         """Builds a string representation of the board."""
@@ -188,7 +188,7 @@ class Game:
                 for i in range(0,3):
                     for mboard in mv:
                         mv2.extend(mboard.find_moveable_pieces(self.roll[0], self.player))
-                    mv = mv2[:]
+                    mv = list(set(mv2))
                     mv2 = []
             else:
                 #need to condisider d1 then d2 and d2 then d1
@@ -218,12 +218,13 @@ class Game:
             if (self.bornoff(m) and bearoff):
                 move = m
                 bearoff = False
-            elif (self.protect_lone(m) and bearoff and lone):
-                move = m
-                lone = False
-            elif (self.find_lone(m) and bearoff and lone and capture):
-                move = m
-                capture = False
+            elif ((.5 < random.random()) and bearoff and lone):
+                if (self.protect_lone(m)):
+                    move = m
+                    lone = False
+                elif ((.5 < random.random()) and self.find_lone(m) and capture):
+                    move = m
+                    capture = False
         #if no move bearsoff, protects a lone, or captures, do something random
         if (bearoff and lone and capture):
             move = random.choice(self.moves)
@@ -244,12 +245,12 @@ class Game:
         """Detects if the number of lone pieces in decreased"""
         res = False
         if (self.player):
-            if (reduce(lambda x, y: x + 1 if (y > 1) else 0, board.p1vec) < \
-                reduce(lambda x, y: x + 1 if (y > 1) else 0, self.board.p1vec)):
+            if (reduce(lambda x, y: x if (y > 1) else x + 1, board.p1vec) < \
+                reduce(lambda x, y: x if (y > 1) else x + 1, self.board.p1vec)):
                 res = True
         else:
-            if (reduce(lambda x, y: x + 1 if (y > 1) else 0, board.p2vec) < \
-                reduce(lambda x, y: x + 1 if (y > 1) else 0, self.board.p2vec)):
+            if (reduce(lambda x, y: x if (y > 1) else x + 1, board.p2vec) < \
+                reduce(lambda x, y: x if (y > 1) else x + 1, self.board.p2vec)):
                 res = True
         return res
 
@@ -296,7 +297,7 @@ class MonteRunner:
             win = 0
             loss = 0
             draw = 0
-            trials = 100
+            trials = 50
             for i in range (1, trials):
                 simGame = Game(Board(branch.p1vec, branch.p2vec), False)
                 i = 1
