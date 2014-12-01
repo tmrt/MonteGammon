@@ -87,11 +87,11 @@ class Board:
                     moveable.append(b)
             #no? ok then generate the moves
             else:
-                for i in range(1, 24):
+                for i in range(1, 25):
                     if (self.p1vec[i] > 0):
                         if (self.free_spot(i, die, p1)):
                             b = Board(self.p1vec[:],self.p2vec[:])
-                            b.move(1, die, p1)
+                            b.move(i, die, p1)
                             moveable.append(b)
         else:
             #must we re-enter?
@@ -102,14 +102,12 @@ class Board:
                     moveable.append(b)
             #no? ok then generate the moves
             else:
-                for i in range(1, 24):
+                for i in range(1, 25):
                     if (self.p2vec[i] > 0):
                         if (self.free_spot(i, die, p1)):
                             b = Board(self.p1vec[:],self.p2vec[:])
-                            b.move(1, die, p1)
+                            b.move(i, die, p1)
                             moveable.append(b)
-        
-        print(moveable)    
         return moveable
                             
 
@@ -157,15 +155,28 @@ class Game:
     def generate_valid_moves(self, player):                
         #make sure we have a valid roll
         if (self.roll != (0,0)):
-            
             #if doubles, need to do 4 moves
-            #if (self.roll[0] == self.roll[1]):
-            #    pass
-            #else:
-                #find moveset, d1 then d2, and d2 then d1
+            if (self.roll[0] == self.roll[1]):
+                #need to seed the initial moveset
+                mv = self.board.find_moveable_pieces(self.roll[0], player)
+                mv2 = []
+                for i in range(0,3):
+                    for mboard in mv:
+                        mv2.extend(mboard.find_moveable_pieces(self.roll[0], player))
+                    mv = mv2[:]
+                    mv2 = []
+            else:
                 d1d2 = self.board.find_moveable_pieces(self.roll[0], player)
                 d2d1 = self.board.find_moveable_pieces(self.roll[1], player)
-        return random.choice(d1d2)
+                d1d2_2 = []
+                d2d1_2 = []
+                for mboard in d1d2:
+                    d1d2_2.extend(mboard.find_moveable_pieces(self.roll[1], player))
+                for mboard in d2d1:
+                    d2d1_2.extend(mboard.find_moveable_pieces(self.roll[0], player))
+                mv = d1d2_2
+                mv.extend(d2d1_2)
+        return mv
             
             
                 
@@ -175,7 +186,8 @@ def main():
     g = Game(Board([0,24,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
                    [0,24,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]))
     g.roll_dice()
-    print(g.generate_valid_moves(True))
+    for m in g.generate_valid_moves(False):
+        print(m)
 
 if __name__ == "__main__":
     main()
