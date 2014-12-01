@@ -215,7 +215,11 @@ class Game:
             elif (self.protect_lone(m) and bearoff and lone):
                 move = m
                 lone = False
-        if (bearoff and lone):
+            elif (self.find_lone(m) and bearoff and lone and capture):
+                move = m
+                capture = False
+        #if no move bearsoff, protects a lone, or captures, do something random
+        if (bearoff and lone and capture):
             move = random.choice(self.moves)
         return move
 
@@ -231,6 +235,7 @@ class Game:
         return res
 
     def protect_lone(self, board):
+        """Detects if the number of lone pieces in decreased"""
         res = False
         if (self.player):
             if (reduce(lambda x, y: x + 1 if (y > 1) else 0, board.p1vec) < \
@@ -239,6 +244,17 @@ class Game:
         else:
             if (reduce(lambda x, y: x + 1 if (y > 1) else 0, board.p2vec) < \
                 reduce(lambda x, y: x + 1 if (y > 1) else 0, self.board.p2vec)):
+                res = True
+        return res
+
+    def find_lone(self, board):
+        """Detects if a captured happened in a move"""
+        res = False
+        if (self.player):
+            if (self.board.p2vec[0] > board.p2vec[0]):
+                res = True
+        else:
+            if (self.board.p1vec[0] > board.p1vec[0]):
                 res = True
         return res
 
