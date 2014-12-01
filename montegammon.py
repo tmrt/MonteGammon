@@ -36,6 +36,12 @@ class Board:
     def __init__(self, p1vec, p2vec):
         self.p1vec = p1vec[:]
         self.p2vec = p2vec[:]
+        
+    def __hash__(self):
+        return hash(''.join(str(x) for x in zip(self.p1vec, self.p2vec)))
+
+    def __eq__(self, other):
+        return (self.p1vec == other.p1vec) and  (self.p2vec == other.p2vec)
 
     def __str__(self):
         """Builds a string representation of the board."""
@@ -154,7 +160,7 @@ class Game:
         self.player = turn
         self.roll = self.roll_dice()
         #array of applied board states
-        self.moves = [] 
+        self.moves = []
         self.board = board
         self.generate_valid_moves()
     
@@ -196,7 +202,7 @@ class Game:
                     d2d1_2.extend(mboard.find_moveable_pieces(self.roll[0], self.player))
                 mv = d1d2_2
                 mv.extend(d2d1_2)
-            self.moves = mv[:]
+            self.moves = list(set(mv))
 
     def select_move(self):
         """Returns a move from the possible moves. Favors, in order:

@@ -16,7 +16,7 @@ a Monte Carlo backgammon AI
   1. ~~Moves are applied to boards, to make applied board states.~~
   2. ~~consider pieces on bar waiting to re-enter~~ 
   3. ~~should double moveable pieces for doubles~~
-  4. Detect Duplicates
+  4. ~~Detect Duplicates~~
 3. ~~Roll Dice~~
 4. ~~Randomly select valid move~~
   1. ~~Always select for bearoff~~
