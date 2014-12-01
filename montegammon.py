@@ -58,21 +58,27 @@ class Board:
         if (p1):
             #move your piece
             self.p1vec[start] -= 1
-            self.p1vec[start+distance] += 1
-            
-            #capture you opponent
-            spot = 25 - start - distance
-            self.p2vec[0] += self.p2vec[spot]
-            self.p2vec[spot] = 0
+            dest = start + distance
+            if (dest == 25):
+                pass
+            else:
+                self.p1vec[start+distance] += 1
+                #capture your opponent
+                spot = 25 - start - distance
+                self.p2vec[0] += self.p2vec[spot]
+                self.p2vec[spot] = 0
         else:
             #move your piece
             self.p2vec[start] -= 1
-            self.p2vec[start+distance] += 1
-            
-            #capture you opponent
-            spot = 25 - start - distance
-            self.p2vec[0] += self.p2vec[spot]
-            self.p2vec[spot] = 0
+            dest = start + distance
+            if (dest == 25):
+                pass
+            else:
+                self.p2vec[start+distance] += 1
+                #capture your opponent
+                spot = 25 - start - distance
+                self.p2vec[0] += self.p2vec[spot]
+                self.p2vec[spot] = 0
             
     def find_moveable_pieces(self, die, p1):
         """finds moveable pieces given the player, opp,
@@ -96,7 +102,7 @@ class Board:
         else:
             #must we re-enter?
             if (self.p2vec[0] > 0):
-                if (free_spot(0, die, p1)):
+                if (self.free_spot(0, die, p1)):
                     b = Board(self.p1vec[:],self.p2vec[:])
                     b.move(0, die, p1)
                     moveable.append(b)
@@ -137,11 +143,15 @@ class Game:
     0 is for captured pieces and 1:24 for number of pieces,
     on each spot"""
     def __init__(self, board):
-        self.p1ply = True
-        self.roll = (0,0)
+        self.player = True
+        self.roll = self.roll_dice()
         #array of applied board states
-        self.moves = []
+        self.moves = [] 
         self.board = board
+        self.generate_valid_moves()
+    
+    def __str__(self):
+        return self.board.__str__()
     
     """Simple function to set the current roll to a tuple of
     1..6 inclusive int"""
@@ -152,42 +162,64 @@ class Game:
     """function that uses the current roll state and ply bool
     to generate a list of all valid moves, considers barred
     pieces"""
-    def generate_valid_moves(self, player):                
+    def generate_valid_moves(self):                
         #make sure we have a valid roll
         if (self.roll != (0,0)):
             #if doubles, need to do 4 moves
             if (self.roll[0] == self.roll[1]):
                 #need to seed the initial moveset
-                mv = self.board.find_moveable_pieces(self.roll[0], player)
+                mv = self.board.find_moveable_pieces(self.roll[0], self.player)
                 mv2 = []
+                #apply the remaining 3 rolls
                 for i in range(0,3):
                     for mboard in mv:
-                        mv2.extend(mboard.find_moveable_pieces(self.roll[0], player))
+                        mv2.extend(mboard.find_moveable_pieces(self.roll[0], self.player))
                     mv = mv2[:]
                     mv2 = []
             else:
-                d1d2 = self.board.find_moveable_pieces(self.roll[0], player)
-                d2d1 = self.board.find_moveable_pieces(self.roll[1], player)
+                #need to condisider d1 then d2 and d2 then d1
+                d1d2 = self.board.find_moveable_pieces(self.roll[0], self.player)
+                d2d1 = self.board.find_moveable_pieces(self.roll[1], self.player)
                 d1d2_2 = []
                 d2d1_2 = []
                 for mboard in d1d2:
-                    d1d2_2.extend(mboard.find_moveable_pieces(self.roll[1], player))
+                    d1d2_2.extend(mboard.find_moveable_pieces(self.roll[1], self.player))
                 for mboard in d2d1:
-                    d2d1_2.extend(mboard.find_moveable_pieces(self.roll[0], player))
+                    d2d1_2.extend(mboard.find_moveable_pieces(self.roll[0], self.player))
                 mv = d1d2_2
                 mv.extend(d2d1_2)
-        return mv
-            
-            
-                
-            
+            self.moves = mv[:]
+
+    def winner(self):
+        if (self.player):
+            return (0 == reduce(lambda x, y: x+y, self.board.p1vec))
+        else:
+            return (0 == reduce(lambda x, y: x+y, self.board.p2vec))
+    
+    def next_turn(self):
+        """This selects a new board state, flips the turn, rolls dice""" 
+        if (self.moves):
+            self.board = random.choice(self.moves)
+        self.moves = []
+        self.roll = self.roll_dice()
+        self.player = not self.player
+        self.generate_valid_moves()
             
 def main():
-    g = Game(Board([0,24,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                   [0,24,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]))
-    g.roll_dice()
-    for m in g.generate_valid_moves(False):
-        print(m)
-
+    g = Game(Board([0,6,0,3,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                   [0,6,0,3,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]))
+    print(g)
+    i = 1
+    steps = 300
+    while (not g.winner() and i < steps):
+        print("{}------------------".format(i))
+        g.next_turn()
+        print(g)
+        i += 1
+    if (i < steps):
+        print("{} Won!".format("White" if g.player else "Black" ))
+    else:
+        print("draw")
+   
 if __name__ == "__main__":
     main()
