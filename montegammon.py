@@ -30,11 +30,15 @@ SOFTWARE."""
 import random
 
 class Board:
+    """This models the board state as 2 vectors. It provides movement and 
+    capturing mechanisms. Provides basic checks on move legality, and finds
+    pieces that can be moved."""
     def __init__(self, p1vec, p2vec):
         self.p1vec = p1vec[:]
         self.p2vec = p2vec[:]
 
     def __str__(self):
+        """Builds a string representation of the board."""
         s = ""
         for i in range(13,25):
             if (self.p1vec[i] > 0):
@@ -55,6 +59,10 @@ class Board:
         
 
     def move(self, start, distance, p1):
+        """Given a starting piece and a distance to travel, this moves
+        a piece to the new spot. It performs captures, but does not check
+        for legality. In the event of illegal moves, tries to keep playable
+        board state"""
         if (p1):
             #move your piece
             self.p1vec[start] -= 1
@@ -63,7 +71,7 @@ class Board:
                 pass
             else:
                 self.p1vec[start+distance] += 1
-                #capture your opponent
+                #capture your opponent, despite their number
                 spot = 25 - start - distance
                 self.p2vec[0] += self.p2vec[spot]
                 self.p2vec[spot] = 0
@@ -138,11 +146,11 @@ class Game:
     """A class to model a gameboard, provide valid moves,
     roll dice, play to completion"""
     
-
-    """Sets up the board with two player state vectors,
-    0 is for captured pieces and 1:24 for number of pieces,
-    on each spot"""
     def __init__(self, board):
+        """Sets up the board with two player state vectors,
+        0 is for barred pieces and 1:24 for number of pieces,
+        on each spot. Starts off with player 1 as playing, rolls the dice
+        and finds valid moves."""
         self.player = True
         self.roll = self.roll_dice()
         #array of applied board states
@@ -153,16 +161,16 @@ class Game:
     def __str__(self):
         return self.board.__str__()
     
-    """Simple function to set the current roll to a tuple of
-    1..6 inclusive int"""
     def roll_dice(self):
+        """Simple function to set the current roll to a tuple of
+        1..6 inclusive int"""
         self.roll = (random.randint(1,6), random.randint(1,6))
         return self.roll
     
-    """function that uses the current roll state and ply bool
-    to generate a list of all valid moves, considers barred
-    pieces"""
     def generate_valid_moves(self):                
+        """function that uses the current roll state and ply bool
+        to generate a list of all valid moves applied to a boar, considers 
+        barred pieces through find_moveable_pieces, performs doubles"""
         #make sure we have a valid roll
         if (self.roll != (0,0)):
             #if doubles, need to do 4 moves
@@ -190,7 +198,38 @@ class Game:
                 mv.extend(d2d1_2)
             self.moves = mv[:]
 
+    def select_move(self):
+        """Returns a move from the possible moves. Favors, in order:
+        1) Bearoff
+        2) Lone piece Protection
+        3) Capture piece
+        4) Random"""
+        move = None
+        bearoff = True
+        lone = True
+        capture = True
+        for m in self.moves:
+            if (self.bornoff(m) and bearoff):
+                move = m
+                bearoff = False
+        if (bearoff):
+            move = random.choice(self.moves)
+        return move
+
+    def bornoff(self, board):
+        """Detects if a piece has been bornoff by comparing the vector sums"""
+        res = False
+        if (self.player):
+            if (reduce(lambda x, y: x+y, board.p1vec) < reduce(lambda x, y: x+y, self.board.p1vec)):
+                res = True
+        else:
+            if (reduce(lambda x, y: x+y, board.p2vec) < reduce(lambda x, y: x+y, self.board.p2vec)):
+                res = True
+        return res
+
     def winner(self):
+        """Determines if there is a winner by checking if there are any pieces
+        left to remove. (sums the player vector and looks for 0)"""
         if (self.player):
             return (0 == reduce(lambda x, y: x+y, self.board.p1vec))
         else:
@@ -199,7 +238,7 @@ class Game:
     def next_turn(self):
         """This selects a new board state, flips the turn, rolls dice""" 
         if (self.moves):
-            self.board = random.choice(self.moves)
+            self.board = self.select_move() 
         self.moves = []
         self.roll = self.roll_dice()
         self.player = not self.player
