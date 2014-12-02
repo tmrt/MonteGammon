@@ -26,7 +26,9 @@ a Monte Carlo backgammon AI
  1. ~~Play random games until completion~~
  2. ~~make a branch for each valid move~~
  3. ~~collect stats on each move, W vs L vs D~~
-6. Compare branches for best move
+6. ~~Compare branches for best move~~
+ 1. show base and roll
+ 2. show best moves
 7. PDF Presentation
-8. Multithreaded
+8. ~~Multithreaded~~
  1. ~~Identify performance issues~~
