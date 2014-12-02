@@ -12,7 +12,7 @@ Copyright (c) 2014 Taylor Martin
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+>to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
@@ -28,6 +28,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE."""
 
 import random
+import multiprocessing as mp
 
 class Board:
     """This models the board state as 2 vectors. It provides movement and 
@@ -36,6 +37,7 @@ class Board:
     def __init__(self, p1vec, p2vec):
         self.p1vec = p1vec[:]
         self.p2vec = p2vec[:]
+        self.bornoff = False
         
     def __hash__(self):
         return hash(reduce(lambda x, y: 10 * x + y, self.p1vec + self.p2vec))
@@ -74,7 +76,7 @@ class Board:
             self.p1vec[start] -= 1
             dest = start + distance
             if (dest == 25):
-                pass
+                self.bornoff = True
             else:
                 self.p1vec[start+distance] += 1
                 #capture your opponent, despite their number
@@ -215,7 +217,7 @@ class Game:
         lone = True
         capture = True
         for m in self.moves:
-            if (self.bornoff(m) and bearoff):
+            if (m.bornoff and bearoff):
                 move = m
                 bearoff = False
             elif ((.5 < random.random()) and bearoff and lone):
@@ -228,6 +230,7 @@ class Game:
         #if no move bearsoff, protects a lone, or captures, do something random
         if (bearoff and lone and capture):
             move = random.choice(self.moves)
+        move.bornoff = False
         return move
 
     def bornoff(self, board):
@@ -282,7 +285,6 @@ class Game:
         self.player = not self.player
         self.generate_valid_moves()
  
-
 class MonteRunner:
     """Takes a Game with a Board state, looks at its possible moves, and runs a
     Monte Carlo Simulation on each of the moves"""
@@ -291,33 +293,49 @@ class MonteRunner:
         self.g = Game(Board([0,6,0,3,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
                             [0,6,0,3,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]), True)
         self.branches = self.g.moves
-        
+     
     def find_best_move(self):
-        for branch in self.branches:
-            win = 0
-            loss = 0
-            draw = 0
-            trials = 50
-            for i in range (1, trials):
-                simGame = Game(Board(branch.p1vec, branch.p2vec), False)
-                i = 1
-                steps = 300
-                while (not simGame.winner() and i < steps):
-                    simGame.next_turn()
-                    #print(g)
-                    i += 1
-                if (i < steps):
-                    if (simGame.player):
-                        win += 1
-                    else:
-                        loss += 1
+        q = mp.Queue()
+        procs = [mp.Process(target=self.task, args=(x,q,)) for x in self.branches]
+        for p in procs:
+            p.start()
+        for p in procs:
+            p.join()
+        results = []
+        while not q.empty():
+            results.append(q.get())
+        results.sort(key=lambda r: -1 * r[1])
+        for r in results:
+            print("Move:--------------------------------------------------")
+            print("{} has score: {}".format(r[0].__str__(), r[1]))
+        
+    def task(self, branch, q):
+        win = 0
+        loss = 0
+        draw = 0
+        trials = 50
+        for i in range (1, trials):
+            simGame = Game(Board(branch.p1vec, branch.p2vec), False)
+            i = 1
+            steps = 300
+            while (not simGame.winner() and i < steps):
+                simGame.next_turn()
+                #print(g)
+                i += 1
+            if (i < steps):
+                if (simGame.player):
+                    win += 1
                 else:
-                    draw += 1
-            print("{} has score: {}".format(branch.__str__(), (win + .3 * draw)/(1.0 * trials)))
+                    loss += 1
+            else:
+                draw += 1
+        q.put((branch,(win + .3 * draw)/(1.0 * trials)))
 
 def main():
     m = MonteRunner()
+    print("Starting from this position and roll: {}".format(m.g.roll))
+    print("{}\n---------------------------------------".format(m.g.board.__str__()))
     m.find_best_move()
-   
+       
 if __name__ == "__main__":
     main()

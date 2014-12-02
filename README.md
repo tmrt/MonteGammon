@@ -29,4 +29,4 @@ a Monte Carlo backgammon AI
 6. Compare branches for best move
 7. PDF Presentation
 8. Multithreaded
- 1. Identify performance issues
+ 1. ~~Identify performance issues~~
